@@ -1,0 +1,213 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Digit Classifier</title>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+<style>
+    body {
+    font-family: Arial, sans-serif;
+    max-width: 800px;
+    margin: 24px auto;
+    padding: 0 16px;
+}
+    .row {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+}
+    canvas {
+    border: 1px solid #333;
+    touch-action: none;
+}
+    button {
+    padding: 10px 14px;
+    margin-right: 10px;
+}
+    .pred {
+    font-size: 20px;
+    margin-top: 12px;
+}
+</style>
+</head>
+<body>
+
+<h2>Draw a Digit (0–5)</h2>
+
+<div class="row">
+    <div>
+        <canvas id="draw" width="280" height="280"></canvas>
+        <div style="margin-top:12px;">
+            <button id="clear">Clear</button>
+            <button id="predict">Predict</button>
+        </div>
+    </div>
+
+    <div>
+        <div class="pred" id="status">Loading model…</div>
+        <div class="pred" id="result"></div>
+
+        <!-- hidden canvas for preprocessing -->
+        <canvas id="mini" width="28" height="28" style="display:none;"></canvas>
+    </div>
+</div>
+
+<script>
+    const MODEL_URL =
+    "https://storage.googleapis.com/tfjs-models/tfjs/mnist_transfer_cnn_v1/model.json";
+
+    const drawCanvas = document.getElementById("draw");
+    const ctx = drawCanvas.getContext("2d");
+    const mini = document.getElementById("mini");
+    const mctx = mini.getContext("2d");
+
+    const statusEl = document.getElementById("status");
+    const resultEl = document.getElementById("result");
+
+    function resetCanvas() {
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, drawCanvas.width, drawCanvas.height);
+    ctx.lineWidth = 24;
+    ctx.lineCap = "round";
+    ctx.strokeStyle = "black";
+    resultEl.textContent = "";
+}
+    resetCanvas();
+
+    let drawing = false;
+    let lastX = 0, lastY = 0;
+
+    function getPos(evt) {
+    const rect = drawCanvas.getBoundingClientRect();
+    return {
+    x: (evt.clientX - rect.left) * (drawCanvas.width / rect.width),
+    y: (evt.clientY - rect.top) * (drawCanvas.height / rect.height),
+};
+}
+
+    drawCanvas.addEventListener("pointerdown", e => {
+    drawing = true;
+    const p = getPos(e);
+    lastX = p.x;
+    lastY = p.y;
+});
+
+    drawCanvas.addEventListener("pointermove", e => {
+    if (!drawing) return;
+    const p = getPos(e);
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+    lastX = p.x;
+    lastY = p.y;
+});
+
+    drawCanvas.addEventListener("pointerup", () => drawing = false);
+    drawCanvas.addEventListener("pointerleave", () => drawing = false);
+
+    document.getElementById("clear").addEventListener("click", resetCanvas);
+
+    function preprocess() {
+    const W = drawCanvas.width, H = drawCanvas.height;
+    const src = ctx.getImageData(0, 0, W, H).data;
+
+    // Build inverted grayscale (ink ~1, background ~0)
+    const g = new Float32Array(W * H);
+    for (let i = 0; i < W * H; i++) {
+    const r = src[i * 4], gr = src[i * 4 + 1], b = src[i * 4 + 2];
+    const gray = (r + gr + b) / 3;
+    g[i] = (255 - gray) / 255;
+}
+
+    // Bounding box of ink
+    const t = 0.12;
+    let minX = W, minY = H, maxX = -1, maxY = -1;
+    for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+    if (g[y * W + x] > t) {
+    if (x < minX) minX = x;
+    if (y < minY) minY = y;
+    if (x > maxX) maxX = x;
+    if (y > maxY) maxY = y;
+}
+}
+}
+
+    // Nothing drawn
+    if (maxX < 0) return tf.zeros([1, 28, 28, 1]);
+
+    // Add margin
+    const margin = 18;
+    minX = Math.max(0, minX - margin);
+    minY = Math.max(0, minY - margin);
+    maxX = Math.min(W - 1, maxX + margin);
+    maxY = Math.min(H - 1, maxY + margin);
+
+    const boxW = maxX - minX + 1;
+    const boxH = maxY - minY + 1;
+
+    // Crop into an offscreen canvas
+    const crop = document.createElement("canvas");
+    crop.width = boxW;
+    crop.height = boxH;
+    const cctx = crop.getContext("2d");
+    cctx.drawImage(drawCanvas, minX, minY, boxW, boxH, 0, 0, boxW, boxH);
+
+    // Place into 28x28 centered, scaled to ~20x20 (MNIST-ish)
+    mctx.clearRect(0, 0, 28, 28);
+    mctx.fillStyle = "white";
+    mctx.fillRect(0, 0, 28, 28);
+
+    const target = 20;
+    const s = Math.min(target / boxW, target / boxH);
+    const newW = Math.max(1, Math.round(boxW * s));
+    const newH = Math.max(1, Math.round(boxH * s));
+    const dx = Math.floor((28 - newW) / 2);
+    const dy = Math.floor((28 - newH) / 2);
+
+    mctx.drawImage(crop, 0, 0, boxW, boxH, dx, dy, newW, newH);
+
+    // Convert 28x28 -> tensor (invert)
+    const img = mctx.getImageData(0, 0, 28, 28).data;
+    const pixels = new Float32Array(28 * 28);
+    for (let i = 0; i < 28 * 28; i++) {
+    const r = img[i * 4], gr = img[i * 4 + 1], b = img[i * 4 + 2];
+    const gray = (r + gr + b) / 3;
+    pixels[i] = (255 - gray) / 255;
+}
+
+    return tf.tensor(pixels, [1, 28, 28, 1]);
+}
+
+
+    let model;
+
+    async function loadModel() {
+    model = await tf.loadLayersModel(MODEL_URL);
+    statusEl.textContent = "Model loaded. Draw a digit.";
+}
+
+    document.getElementById("predict").addEventListener("click", async () => {
+    if (!model) return;
+
+    resultEl.textContent = "Predicting…";
+    const x = preprocess();
+    const logits = model.predict(x);
+    const probs = await logits.data();
+
+    let best = 0;
+    for (let i = 1; i < probs.length; i++) {
+    if (probs[i] > probs[best]) best = i;
+}
+
+    resultEl.textContent = `Prediction: ${best}`;
+    tf.dispose([x, logits]);
+});
+
+    loadModel();
+</script>
+</body>
+</html>
