@@ -1,0 +1,33 @@
+//     <div
+//             className="proposal"
+//             onMouseEnter={() => setHovered(true)}
+//             onMouseLeave={() => setHovered(false)}
+//             onMouseMove={(e) => handleMouseMove(e)}
+//         >
+//             <div className="problem" style={{
+//                 width: `${hovered ? xPercent : 50}%`
+//             }}>
+//                 Our goal is to help people in need with natural resources/basic necessities
+//
+//                 There are many citizens within our community who need help taking care of themselves or their families. As a community, we should help people in small but effective ways to foster unity.
+//
+//             </div>
+//             <div className="solution" style={{
+//                 width: `${hovered ? 100 - xPercent : 50}%`
+//             }}>
+//                 Our goal is to help people in need with natural resources/basic necessities
+//
+//                 There are many citizens within our community who need help taking care of themselves or their families. As a community, we should help people in small but effective ways to foster unity.
+//
+//             </div>
+//         </div>
+
+    const [hovered, setHovered] = useState(false);
+    const [xPercent, setXPercent] = useState(0);
+
+    const handleMouseMove = (e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const percent = (x / rect.width) * 100;
+        setXPercent(percent);
+    };

@@ -1,0 +1,178 @@
+body
+{
+    background: linear-gradient(-45deg, var(--color-blue-light) 0%, var(--color-blue-dark) 100%) no-repeat;
+}
+
+.container
+{
+    width: 100vw;
+    height: 100vh;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+}
+
+.scheduler
+{
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+
+    backdrop-filter: blur(50px);
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    border-radius: 20px;
+
+    width: 1000px;
+    height: 600px;
+
+    padding: 20px;
+}
+
+.scheduler_title
+{
+    width: 100%;
+    font-size: 32px;
+    border-bottom: 1px solid lightgray;
+
+    padding-bottom: 20px;
+}
+
+.scheduler_inputs
+{
+    display: flex;
+    flex-direction: column;
+
+    height: 100%;
+
+    > *
+    {
+        padding-bottom: 50px;
+    }
+
+    padding: 40px 0;
+
+}
+
+
+.scheduler_options_submit
+{
+    background-color: var(--color-red);
+    color: white;
+    margin-right: 10px;
+}
+
+.scheduler_options_cancel
+{
+    background-color: lightgray;
+}
+
+
+.scheduler_contents {
+    display: flex;
+    width: 100%;
+    height: 90%;
+
+    margin-top: 10px;
+
+    padding-bottom: 30px;
+}
+
+.left {
+    flex: 2; /* takes 2 parts */
+    border-right: 1px solid lightgray;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+}
+
+.right {
+    flex: 1; /* takes 1 part */
+    padding-left: 25px;
+}
+
+
+.right_title
+{
+    margin-bottom: 30px;
+}
+
+.appointments
+{
+    width: 100%;
+    height: 82%;
+
+    overflow-y: scroll;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+}
+
+.appointment
+{
+    background-color: var(--color-red);
+    color: white;
+
+    border-radius: 15px;
+
+    width: max(275px, 80%);
+    margin-bottom: 15px;
+
+    padding: 5px 15px;
+
+    position: relative;
+
+}
+
+.appointment:hover .appointment_cancel
+{
+    visibility: visible;
+}
+
+.appointment_cancel
+{
+    content: "X";
+
+    background-color: rgba(0, 0, 0, 0.2);
+    color: red;
+
+    position: absolute;
+    top: -5px;
+    left: -5px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    padding: 2px 8px;
+    font-size: 12px;
+
+    border-radius: 100%;
+
+    cursor: pointer;
+
+    visibility: hidden;
+}
+
+.appointment_cancel:hover
+{
+    scale: 110%;
+}
+
+.appointment_contact
+{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    border-bottom: 1px solid lightgray;
+}
+
+.appointment_email
+{
+    font-size: 12px;
+}

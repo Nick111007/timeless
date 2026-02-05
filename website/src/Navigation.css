@@ -1,0 +1,67 @@
+.navbar
+{
+    background-color: #001627;
+    color: #ffffff;
+
+    padding: 0 90px;
+
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+
+    height: 50px;
+
+
+    font-size: 14px;
+    width: 100vw;
+
+    z-index: 99;
+}
+
+.navbar_logo
+{
+    aspect-ratio: 1 / 1;
+    height: 100%    ;
+}
+
+.navbar_pages
+{
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    .navbar_page
+    {
+        background-color: transparent;
+        color: white;
+
+        height: 100%;
+
+        border: none;
+        border-radius: 0;
+
+        padding: 0 30px;
+
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+
+    }
+
+    .navbar_page:hover
+    {
+        background-color: rgba(255, 255, 255, 0.05);
+    }
+}
+
+.navbar_cart:hover
+{
+    scale: 103%;
+}
