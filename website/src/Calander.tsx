@@ -4,7 +4,7 @@ import {useEffect, useState} from "react";
 
 
 
-function Products()
+function Calander()
 {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
@@ -118,4 +118,4 @@ function getMonthShort(x: number) {
     return months[x - 1] || "";
 }
 
-export default Products;
+export default Calander;
